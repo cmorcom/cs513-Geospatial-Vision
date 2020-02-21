@@ -1,0 +1,3 @@
+#ignore all probe data
+**/HW1/sample_drive/
+**/HW1/__pycache__/
