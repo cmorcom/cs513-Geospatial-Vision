@@ -1,3 +1,7 @@
 #ignore all probe data
 **/HW1/sample_drive/
 **/HW1/__pycache__/
+**/HW2/probe_data_map_matching/__pycache__/
+**/HW2/probe_data_map_matching/*.csv
+**/HW2/probe_data_map_matching/*.xlsx
+**/HW2/*.rar
