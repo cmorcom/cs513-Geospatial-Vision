@@ -15,29 +15,36 @@ from tkinter import *
 from tkinter import filedialog
 from sortedcontainers import SortedDict, SortedList
 
+def flattenList(l):
+	return [i for sl in l for i in sl]
+
 def binarySearch(data, val):
-	low, high = 0, len(data)
-	while low != high:
+	low, high = 0, len(data)-1
+	while low <= high:
+		#print("low={}, high={}".format(low,high), end="\n\n")
 		mid = (low+high)//2
 		if val < float(data[mid]): high = mid-1
 		elif val > float(data[mid]): low = mid+1
 		else: return mid
-		#print("low={}, high={}".format(low,high), end="\n\n")
-	#print("VALUE:", val, "type =",type(val))
 	return mid
 	#raise ValueError("list empty?")
+
+def linearSearch(data, val):
+	closestIDX = 0
+	closestdiff = 10000000
+	for x in range(len(data)):
+		if abs(float(data[x])-float(val)) < closestdiff:
+			closestIDX = x
+	return closestIDX
 
 def parseProbePoints(filename, maplinks=None, outfilepointer=None): #string arg 
 	#data={} #dict of probepoints: data[sampleID] = list(probepoints with same sampleID)
 	file = open(filename, "r")
 	x=0
-	while x<1000: 
+	while True: 
 		line = file.readline()
 		if line:
 			probe = ProbePoint(line) #get probe data
-			print(probe)
-			#if probe.sampleID not in data.keys(): data[probe.sampleID] = [probe] #cluster data by sampleID
-			#else: data[probe.sampleID].append(probe)
 			matchedpoint = match(probe, maplinks)
 			if matchedpoint:
 				outfilepointer.write(str(matchedpoint)+'\n')
@@ -61,32 +68,44 @@ def parseLinks(filename, plotting=False): #string arg
 	data=SortedDict()
 	file = open(filename, "r")
 	x=0
-	while x<1000: #(for testing)
+	while True: #(for testing)
 		line = file.readline()
 		if line:
 			link = MapLink(line)
 			if plotting: plotLinkPoint(link)
 			#sort point by utm coordinate for ref node (x first, then y)
-			if link.refX() not in data: data[link.refX()] = SortedDict({link.refY():link})
-			else: (data[link.refX()])[link.refY()] = link
+			if link.refX() not in data: data[link.refX()] = [link]
+			else: (data[link.refX()]).append(link)
 		else:
 			break
 		x+=1
 		print("Read", x, "Map Links", end = "\r")
 	file.close()
 	print("Read all", x, "Map Links")
+	#if plotting:
 	#plt.savefig("Map_Links_Plot.png")
 	#plt.show()
 	return data
 
 
-def match(probe, links, threshold =37): #threshold = 37 meters (which is 10 times average width of lane on highway)
-	#find closest reference point then check shapepoints and nonref points for closest
-	
+def match(probe, links):
 	idx = binarySearch(list(links.keys()),float(probe.X()))
-	closest200byX = {(k, links[k]) for k in links.keys[idx-100:idx+100]} #get subset of dict containing 200 closest links
-	closestbyY = binarySearch(sorted(list(closest200byX.keys())), float(probe.Y())) #get the idx of key of closest link (in dict) by y coordinate in dict of closest 200 links 
-	closestLink = closest200byX[closest200byX.keys()[closestbyY]] #store the closest link
+	closest5byX = {}
+	for k in list(links.keys())[max(0,idx-2):min(idx+2, len(links))]: #get subset of dict containing 200 closest links
+		closest5byX[k] = links[k]
+	#linear search for closest link
+	closestLink = None
+	closestdiff = 10000000
+	for k,v in closest5byX.items():
+		for ml in v: #ml short for maplunt
+			diff = abs(probe.Y()-ml.refY())
+			if diff < closestdiff:
+				closestLink = ml
+				closestdiff = diff
+
+	#print(probe, "\n", closestLink)
+	#print(closest5byX.items())
+	#print("PROBE:\t{},{}\nBEST:\t{},{}".format(probe.X(), probe.Y(), closestLink.refX(),closestLink.refY()))
 
 	matched = MatchedPoint(probe, closestLink)
 
