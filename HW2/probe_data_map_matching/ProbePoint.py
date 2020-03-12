@@ -1,3 +1,4 @@
+from MapLink import MapLink
 import utm
 
 class ProbePoint:
@@ -15,6 +16,8 @@ class ProbePoint:
 
 		#Convert lat and long to UTM coordinate
 		self.utm = utm.from_latlon(float(latitude), float(longitude))
+		#self.utm = (float(coor[0]), float(coor[1]), int(coor[2], str(coor[3])))
+
 		
 	def __str__(self):
 		a = "ProbePoint(\n"+ \
@@ -27,3 +30,6 @@ class ProbePoint:
 			"\tUTM: " + str(self.utm) + "\n" + \
 		")"
 		return a
+
+	def X(self): return self.utm[0]
+	def Y(self): return self.utm[1]

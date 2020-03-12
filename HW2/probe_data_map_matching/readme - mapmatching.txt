@@ -1,6 +1,6 @@
 Input: Probe data and map (see attachment)
--The raw probe points collected over several months
--The link data for the links that probe points can be map-matched to.
+-- The raw probe points collected over several months
+-- The link data for the links that probe points can be map-matched to.
 
 Tasks:
 -- map match probe points to road links

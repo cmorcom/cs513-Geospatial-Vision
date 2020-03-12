@@ -1,20 +1,7 @@
 import math
-
-"""
-LinkData Record Format: (map data, says where road center lines are)
-
-    linkPVID, refNodeID, nrefNodeID, length, functionalClass, directionOfTravel, speedCategory, fromRefSpeedLimit, toRefSpeedLimit, fromRefNumLanes, toRefNumLanes, multiDigitized, urban, timeZone, shapeInfo, curvatureInfo, slopeInfo
-
-        curvatureInfo   contains an array of curvature entries consisting of the distance from reference node (in decimal meters)
-            and curvature at that point (expressed as a decimal value of 1/radius in meters). The array entries are delimited by 
-            a vertical bar character and the distance from reference node and curvature values for each entry are separated by a 
-            forward slash character (dist/curvature|dist/curvature). This entire field will be null if there is no curvature data for the link.
-
-        slopeInfo contains an array of slope entries consisting of the distance from reference node (in decimal meters) and slope at that point 
-            (in decimal degrees). The array entries are delimited by a vertical bar character and the distance from reference node and slope 
-            values are separated by a forward slash character (dist/slope|dist/slope). This entire field will be null if there is no slope data for the link.
-"""
 import utm
+
+#LinkData Record Format: (map data, says where road center lines are)
 
 class MapLink():
     def __init__(self, attrs):
@@ -101,3 +88,6 @@ class MapLink():
             "\tslopeInfo: " + str(self.slopeInfo) + "\n" +\
         ")"
         return a
+
+    def refX(self): return self.shapeInfo[0][0]
+    def refY(self): return self.shapeInfo[0][1]
