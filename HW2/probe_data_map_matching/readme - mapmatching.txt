@@ -7,8 +7,6 @@ Tasks:
 -- derive road slope for each road link
 -- evaluate the derived road slope with the surveyed road slope in the link data file
 
-
-
 GOAL: Map matching (point based)
 have probe point and calc distance to each link.
 how to assoc. correct probe point to each link.
@@ -79,7 +77,17 @@ MatchedPoints Record Format:
 		linkPVID	 is the published versioned identifier for the link.
 		direction	 is the direction the vehicle was travelling on thelink (F = from ref node, T = towards ref node).
 		distFromRef	 is the distance from the reference node to the map-matched probe point location on the link in decimal meters.
-		distFromLink is the perpendicular distance from the map-matched probe point location on the link to the probe point in decimal meters.
+		distFromLink is the  perpendicular distance from the map-matched probe point location on the link to the probe point in decimal meters.
 
 
- 
+Slope output is the following file:
+
+ Partition6467MatchedSlopes.csv	The subset of probe points in partion 6467 that were successfully map-matched to a link with slopeInfo.
+
+Record Format:
+	
+	RealSlope, DerivedSlope, PercentError
+
+	RealSlope		is the data from the original maplink
+	DerivedSlope	is the calculated slope using a difference in altitude over euclidian distance from two close ProbePoints
+	PercentError	is the percentage difference between the derived and real slopes

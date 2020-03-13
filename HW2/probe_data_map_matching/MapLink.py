@@ -91,3 +91,6 @@ class MapLink():
 
     def refX(self): return self.shapeInfo[0][0]
     def refY(self): return self.shapeInfo[0][1]
+    def nonrefX(self): return self.shapeInfo[-1][0]
+    def nonrefY(self): return self.shapeInfo[-1][1]
+    

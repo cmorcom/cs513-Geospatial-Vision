@@ -37,7 +37,7 @@ def linearSearch(data, val):
 			closestIDX = x
 	return closestIDX
 
-def parseProbePoints(filename, maplinks=None, outfilepointer=None): #string arg 
+def parseProbePoints(filename, maplinks=None, outfilepointer=None, plotting=False): #string arg 
 	#data={} #dict of probepoints: data[sampleID] = list(probepoints with same sampleID)
 	file = open(filename, "r")
 	x=0
@@ -45,6 +45,7 @@ def parseProbePoints(filename, maplinks=None, outfilepointer=None): #string arg
 		line = file.readline()
 		if line:
 			probe = ProbePoint(line) #get probe data
+			if plotting: plt.plot(probe.X(),probe.Y())
 			matchedpoint = match(probe, maplinks)
 			if matchedpoint:
 				outfilepointer.write(str(matchedpoint)+'\n')
@@ -125,6 +126,11 @@ if __name__ == "__main__":
 	rawProbeData = ".\\Partition6467ProbePoints.csv"#filedialog.askopenfilename(title = "Select Probe Data",filetypes = (("comma-separated values","*.csv"),))
 	probePoints = parseProbePoints(rawProbeData, maplinks=mapLinks, outfilepointer=output)
 
-	#safe way to ensure resources close and we can view data later
-
 	output.close()
+
+	#reopen closed output to read so we can calculate the slopes
+	#matchedfile = open(outfile, "r")
+	#sfile = ".\\Partition6467MatchedSlopes.csv"
+	#slopefile = open(sfile, "w")
+
+	#we have already read all the map links. now to scan the outfile for each probe.
