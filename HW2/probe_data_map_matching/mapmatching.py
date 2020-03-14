@@ -41,6 +41,7 @@ def parseProbePoints(filename, maplinks=None, outfilepointer=None, plotting=Fals
 	#data={} #dict of probepoints: data[sampleID] = list(probepoints with same sampleID)
 	file = open(filename, "r")
 	x=0
+	for s in range(350328): _ =file.readline()
 	while True: 
 		line = file.readline()
 		if line:
@@ -121,7 +122,7 @@ if __name__ == "__main__":
 	mapLinks = parseLinks(rawLinkData, plotting=False)
 	
 	outfile = "Partition6467MatchedPoints.csv"
-	output = open(outfile,"w")
+	output = open(outfile,"a")
 
 	rawProbeData = ".\\Partition6467ProbePoints.csv"#filedialog.askopenfilename(title = "Select Probe Data",filetypes = (("comma-separated values","*.csv"),))
 	probePoints = parseProbePoints(rawProbeData, maplinks=mapLinks, outfilepointer=output)
