@@ -4,6 +4,8 @@ from PIL import Image
 
 EarthRadius = 6378137
 
+apikey = "MYZG07xtzQ3MsfEnzRmv~cccNT6PeSZfYUexFs3s45Q~Ar7OkhMVCiYKLOXwi5GohsojgNu91IGZBIGhlk7PE0j7vp9qAOyKbMKrnjGr-dFg"
+
 #create parser for coordinate bounds
 parser = argparse.ArgumentParser(description="Generate a map tile given lattitude and longitude coordinates.")
 parser.add_argument("coordinate", type=float, nargs=4, action="store", help="specify bounding box in decimal degrees: x1 y1 x2 y2") #must have four coordinates
@@ -46,16 +48,31 @@ tYmin = (int)(pYmin//256); tYmax = (int)(pYmax//256)
 if tXmax<tXmin: tXmin,tXmax = tXmax, tXmin
 if tYmax<tYmin: tYmin,tYmax = tYmax, tYmin
 
-if v: print("\nTileBox: ({},{}) -> ({},{})".format(tXmin,tYmin,tXmax,tYmax))
+if v: print("\nTileBox: ({},{}) -> ({},{})\n".format(tXmin,tYmin,tXmax,tYmax))
 
 #interleaves the bits of the (x,y) tile coordinate
-def genQuadkey(a,b,n): #n=level = length of qkey 
+def genQuadkey(a,b,n): #n=level = length of qkey
+	global v 
 	#example:
 	#	 tileX: -0-1-1 = 3 (base 2)
 	#	 tileY: 1-0-1- = 5 (base 2)
 	# quadkey=  100111 = 213 (base 4)
-	
+	strx=format(a,"b")
+	if len(strx) < n: strx = (n-len(strx))*'0'+ strx
+	if v: print("tileX={}:".format(a),strx)
+	stry=format(b,"b")
+	if len(stry) < n: stry = (n-len(stry))*'0'+ stry
+	qkstr=''.join(y+x for x,y in zip(strx,stry))
+	if v: print("tiley={}:".format(b),stry)
+	if v: print("Binary quadkey:", qkstr)
 
+	#convert to base 4 number string
+	l=0;r=2
+	qkBase4=''
+	while(r<=2*n):
+		qkBase4+= str(int(qkstr[l:r],base=2))
+		l+=2;r+=2
+	if v: print("Base4 quadkey:", qkBase4,'\n')
 
 #generate array of tiles that we need
 tileskeys=[]
@@ -63,6 +80,18 @@ for x in range(tXmin, tXmax+1):
 	for y in range(tYmin, tYmax+1):
 		qkey=genQuadkey(x,y,lvl)
 		tileskeys.append([qkey,(x,y)])
-		if v: print((qkey,x,y))
 
-## Once we have the tileBox and quadkeys, we can start downloading tiles
+"""
+## Once we have the tileBox and quadkeys, we can start downloading tiles ##
+import urllib3 as urllib
+
+baseREST="http://dev.virtualearth.net/REST/V1/Imagery/Metadata/RoadOnDemand?output=json&include=ImageryProviders&key="
+apikey = "MYZG07xtzQ3MsfEnzRmv~cccNT6PeSZfYUexFs3s45Q~Ar7OkhMVCiYKLOXwi5GohsojgNu91IGZBIGhlk7PE0j7vp9qAOyKbMKrnjGr-dFg"
+
+#get Rest metadata
+http=urllib.PoolManager()
+req = http.request('GET', baseREST+apikey)
+if v: print("REST Metadata URL:",baseREST+apikey)
+if v: print("GET response Code:", req.status)
+
+"""
