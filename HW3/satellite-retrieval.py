@@ -26,13 +26,12 @@ if maxY==minY: raise Exception("Invalid coordinates. Specify two different Longi
 if (lvl>23 or lvl<1): raise Exception("Invalid Detail Level. Choose 1 to 23.")
 
 #reformat bounding box to go from min->max
-def switch(a,b): a,b = b,a
 if maxX<minX: minX,maxX = maxX,minX
 if maxY<minY: minY,maxY = maxY,minY
 if v: print("Bounding Box: ({},{}) -> ({},{})".format(minX,minY,maxX,maxY))
 if v: print("Level of Detail =", lvl)
 
-#took these from the source material given to us
+#took these from the Tile System Description
 sinLatMin = sin(radians(minY))
 sinLatMax = sin(radians(maxY))
 
@@ -43,9 +42,27 @@ if (v): print("\nsinLatMin: {}\nsinLatMax: {}\npXmin: {}\npXmax: {}\npYmin: {}\n
 #Calc Tile Numbers for each coordinate given c is a pixel coordinate and l is lvl
 tXmin = (int)(pXmin//256); tXmax = (int)(pXmax//256)
 tYmin = (int)(pYmin//256); tYmax = (int)(pYmax//256)
+#reformat tile box to go from min->max
 if tXmax<tXmin: tXmin,tXmax = tXmax, tXmin
 if tYmax<tYmin: tYmin,tYmax = tYmax, tYmin
 
 if v: print("\nTileBox: ({},{}) -> ({},{})".format(tXmin,tYmin,tXmax,tYmax))
+
+#interleaves the bits of the (x,y) tile coordinate
+def genQuadkey(a,b,n): #n=level = length of qkey 
+	#example:
+	#	 tileX: -0-1-1 = 3 (base 2)
+	#	 tileY: 1-0-1- = 5 (base 2)
+	# quadkey=  100111 = 213 (base 4)
+	
+
+
 #generate array of tiles that we need
-tiles=[(x,y) for x in range(tXmin, tXmax+1) for y in range(tYmin, tYmax+1)]
+tileskeys=[]
+for x in range(tXmin, tXmax+1): 
+	for y in range(tYmin, tYmax+1):
+		qkey=genQuadkey(x,y,lvl)
+		tileskeys.append([qkey,(x,y)])
+		if v: print((qkey,x,y))
+
+## Once we have the tileBox and quadkeys, we can start downloading tiles
