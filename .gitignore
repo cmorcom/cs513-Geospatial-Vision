@@ -1,0 +1,6 @@
+#ignore all probe data
+**/HW1/sample_drive/
+**/__pycache__/
+**/HW2/*.xlsx
+**/HW2/*.csv
+**/*.zip
