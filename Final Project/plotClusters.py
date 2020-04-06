@@ -3,6 +3,7 @@ import re
 import numpy as np
 import utm
 import plotly.graph_objects as go
+from sklearn.cluster import KMeans
 
 ##### CONSTANTS #####
 """
@@ -14,6 +15,10 @@ Coordinate Range:
     (UTM) (E,N,Zone): (657224.13, 11.027014, 32T) to 
                       (657433.61, 5085306.11 32T)
 """
+
+def colorcluster(clusterNo):
+	hexColors=[0xFF6800,0xD909E8,0x036CFF,0x09E839,0xFFDD0A,0xFF0303,0x00FFD9,0xA5E80C]
+	return hexColors[clusterNo]
 
 def skiplines(fp, n):
 	for _ in range(n):
@@ -104,7 +109,7 @@ CarX, CarY, CarZ, carPlot = processCarData(".\\final_project_data\\trajectory.fu
 
 # Process Point Cloud here
 done = False
-threshold = 1
+threshold = 10
 num=0
 Xs, Ys, Zs, Is = [], [], [], []
 while not done:
@@ -121,22 +126,55 @@ while not done:
 			Zs.append(z)
 			Is.append(i)
 
+#generate numpy 2D array for clustering data
+Xs = np.array(Xs)
+Ys = np.array(Ys)
+Zs = np.array(Zs)
+IsN = np.array(Is)
+data = np.column_stack((Xs, Ys, Zs))
+
+#generate model and fit data
+print("BEGIN CLUSTERING POINTCLOUD")
+est = KMeans(n_clusters=3)
+est.fit(data, sample_weight=IsN)
+ykmeans = est.predict(data)
+print(ykmeans); print(data); print(len(ykmeans)); print(len(data))
+
+#generate meshes for clusters
+
+
+centers = est.cluster_centers_
+centersPlot = go.Scatter3d(
+	name="Lidar Point Cloud",
+	x=centers[:,0],
+	y=centers[:,1],
+	z=centers[:,2],
+	mode='markers',
+	marker=dict(
+		size=9,
+		color='fuchsia', #shades of BW
+		opacity=0.6
+	)
+)
+
 #generate pointcloud graph
 pointcloud = go.Scatter3d(
-		name="Lidar Point Cloud",
-		x=Xs,
-		y=Ys,
-		z=Zs,
-		mode='markers',
-		marker=dict(
-			size=3,
-			color=[f'rgba({(180-int(a*180/255))//3}, {(180-int(a*180/255))//3}, {(180-int(a*180/255))//3}, {a})' for a in Is], #shades of BW
-			opacity=0.1
-		))
+	name="Lidar Point Cloud",
+	x=data[:,0],
+	y=data[:,1],
+	z=data[:,2],
+	mode='markers',
+	marker=dict(
+		size=3,
+		color=[colorcluster(cn) for cn in ykmeans],
+		opacity=0.25
+	)
+)
+
 
 # Plot Figure Here
 fig = go.Figure(
-	data=[pointcloud, cameraPlot, carPlot], #plot: pointcloud, cameraplot
+	data=[pointcloud, centersPlot, cameraPlot, carPlot], #plot: pointcloud, cameraplot
 	layout=go.Layout(
 		title="Final Project Point Cloud Plot",
 		margin=dict(l=0, r=0, b=0, t=0),
