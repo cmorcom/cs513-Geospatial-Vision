@@ -1,9 +1,4 @@
-import pandas as pd
-import re
-import numpy as np
-import utm
-import plotly.graph_objects as go
-from sklearn.cluster import KMeans
+import os
 
 ##### CONSTANTS #####
 """
@@ -15,10 +10,33 @@ Coordinate Range:
     (UTM) (E,N,Zone): (657224.13, 11.027014, 32T) to 
                       (657433.61, 5085306.11 32T)
 """
+threshold = 8 #pick a number (8-255) to filter out pointcloud points
+cpuCount = os.cpu_count()
+print("Number of CPUs to use:", cpuCount) 
+
+import pandas as pd
+import re
+import numpy as np
+from math import sqrt
+import utm
+import plotly.graph_objects as go
+import plotly.offline as po
+from sklearn.cluster import DBSCAN
+#DBSCAN - Density-Based Spatial Clustering of Applications with Nois
+
+
+def xyDistFromCam(c, p):
+	return abs(sqrt((c[0]-p[0])**2+(c[1]-p[1])**2))
+
+def xyDistFromTrajectory(c, t_list):
+	dists = [abs(sqrt((c[0]-p[0])**2+(c[1]-p[1])**2)) for p in t_list]
+	dists.append(0x7FFFFFFF)#max int 
+	return min(dists)
 
 def colorcluster(clusterNo):
-	hexColors=[0xFF6800,0xD909E8,0x036CFF,0x09E839,0xFFDD0A,0xFF0303,0x00FFD9,0xA5E80C]
-	return hexColors[clusterNo]
+	if clusterNo == -1: return 'white'
+	colors=['saddlebrown','black','green','navy','purple','darkslategray','orange','maroon','olive','darkolivegreen']
+	return colors[clusterNo%len(colors)]
 
 def skiplines(fp, n):
 	for _ in range(n):
@@ -106,10 +124,10 @@ CamX,CamY,CamZ,CamQ, cameraPlot = processCameraData(".\\final_project_data\\imag
 
 #process Car Data And Plot it
 CarX, CarY, CarZ, carPlot = processCarData(".\\final_project_data\\trajectory.fuse", utmMin=utmMin)
+carXY= zip(CarX,CarY)
 
 # Process Point Cloud here
 done = False
-threshold = 10
 num=0
 Xs, Ys, Zs, Is = [], [], [], []
 while not done:
@@ -119,12 +137,13 @@ while not done:
 	else:
 		x,y,z,i = tup
 		utmCoor = utm.from_latlon(y,x)
-		if i > threshold and z < CamZ-1: #ignore all points higher than 0.5 meter below camera
-
-			Xs.append(utmCoor[0]-utmMin[0])
-			Ys.append(utmCoor[1]-utmMin[1])
-			Zs.append(z)
-			Is.append(i)
+		if i > threshold:# and z < CamZ-1: #ignore all points higher than 0.5 meter below camera
+			if xyDistFromCam((CamX,CamY),(x,y)) > 12.14:  #ignore points closer than legal lane width (12.1391 ft) to cam
+				if xyDistFromTrajectory((CamX,CamY),carXY) > 12.14: #iNEED TO: ignore points in direction of trajectory
+					Xs.append(utmCoor[0]-utmMin[0])
+					Ys.append(utmCoor[1]-utmMin[1])
+					Zs.append(z)
+					Is.append(i)
 
 #generate numpy 2D array for clustering data
 Xs = np.array(Xs)
@@ -135,14 +154,13 @@ data = np.column_stack((Xs, Ys, Zs))
 
 #generate model and fit data
 print("BEGIN CLUSTERING POINTCLOUD")
-est = KMeans(n_clusters=3)
-est.fit(data, sample_weight=IsN)
-ykmeans = est.predict(data)
-print(ykmeans); print(data); print(len(ykmeans)); print(len(data))
+est = DBSCAN(eps=3.5, min_samples=6500//threshold, algorithm='auto', n_jobs=cpuCount)
+clusterArray = est.fit_predict(data, sample_weight=IsN) #tree is 3-6 levels deep (4 cores)
+print(data); print(len(data)); print(est); print(clusterArray); print(len(clusterArray));
 
 #generate meshes for clusters
 
-
+"""
 centers = est.cluster_centers_
 centersPlot = go.Scatter3d(
 	name="Lidar Point Cloud",
@@ -156,6 +174,7 @@ centersPlot = go.Scatter3d(
 		opacity=0.6
 	)
 )
+"""
 
 #generate pointcloud graph
 pointcloud = go.Scatter3d(
@@ -166,7 +185,7 @@ pointcloud = go.Scatter3d(
 	mode='markers',
 	marker=dict(
 		size=3,
-		color=[colorcluster(cn) for cn in ykmeans],
+		color=[colorcluster(cn) for cn in clusterArray],
 		opacity=0.25
 	)
 )
@@ -174,40 +193,45 @@ pointcloud = go.Scatter3d(
 
 # Plot Figure Here
 fig = go.Figure(
-	data=[pointcloud, centersPlot, cameraPlot, carPlot], #plot: pointcloud, cameraplot
+	data=[pointcloud, cameraPlot, carPlot], #plot: pointcloud, cameraplot
 	layout=go.Layout(
 		title="Final Project Point Cloud Plot",
 		margin=dict(l=0, r=0, b=0, t=0),
-		paper_bgcolor='rgb(120,120,120)',
+		paper_bgcolor='dimgray',#'rgb(120,120,120)',
 		plot_bgcolor='rgba(0,0,100,50)',
 		scene=dict(
+			aspectmode='manual',
+			aspectratio=dict(x=6,y=6,z=1),
 			xaxis=dict(autorange=False,
-				range=(0,240),
+				title="Easting + 657224.13 (m)",
+				range=(20,230),
 				tick0=0,
 				dtick=10,
 				showticklabels=True,
 				gridcolor='tan',
-				backgroundcolor='antiquewhite',
+				backgroundcolor='lightgrey',
 			),
 			yaxis=dict(autorange=False,
-				range=(0,240),
+				title="Northing + 5085306.11 (m)",
+				range=(10,220),
 				tick0=0,
 				dtick=10,
 				showticklabels=True,
 				gridcolor='tan',
-				backgroundcolor='antiquewhite',
+				backgroundcolor='lightgrey',
 			),
 			zaxis=dict(
-				range=(220,230),
-				tick0=0,
-				dtick=1,
+				title="Altitude (m)",
+				range=(220,235),
+				dtick=5,
 				showticklabels=True,
 				gridcolor='tan',
-				backgroundcolor='antiquewhite',
+				backgroundcolor='lightgrey',
 
 			)
 		)
 	)
 )
 
+po.plot(fig, filename=".\\results\\pointcloud.html", auto_open=False)
 fig.show()

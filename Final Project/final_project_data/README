@@ -1,3 +1,7 @@
+You can see results in the results folder:
+    -- please enable webGL in "chrome://flags" to open the pointcloud.html
+    -- RoadRecognition.html tries to cluster the pointcloud based on other parameters (earlier version but still relevant)
+
 Input data:
 
 Coordinate Range: 
@@ -32,8 +36,7 @@ trajectory.fuse
 
 Output:
     Using the point cloud and images, generate layered images:
-        - mask of guardrail on images
-        - isolated points (or outline) of the guard rail
+        - isolated points pertaining to specified object (road boundaries)
 
 Methodology:
     -- process all points and subtract the min value of the bounding box 
