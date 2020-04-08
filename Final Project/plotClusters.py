@@ -1,5 +1,20 @@
+#CONSTANTS TO USE
+
+trajectoryFile = ".\\final_project_data\\trajectory.fuse"
+cameraFile = ".\\final_project_data\\image\\camera.config"
+pointcloudFile = ".\\final_project_data\\final_project_point_cloud.csv"
+
+threshold = 8 #pick a number (8-255) to filter out pointcloud points
+eps=3.5
+minsamples = 6500//threshold
+
+outfilename = ".\\results\\pointcloud_thresh={}_eps={}_minsamples={}.html"\
+				.format(threshold,eps,minsamples)
+
 import os
 
+cpuCount = os.cpu_count()
+print("Number of CPUs to use:", cpuCount) 
 ##### CONSTANTS #####
 """
 Coordinate Range: 
@@ -10,9 +25,6 @@ Coordinate Range:
     (UTM) (E,N,Zone): (657224.13, 11.027014, 32T) to 
                       (657433.61, 5085306.11 32T)
 """
-threshold = 8 #pick a number (8-255) to filter out pointcloud points
-cpuCount = os.cpu_count()
-print("Number of CPUs to use:", cpuCount) 
 
 import pandas as pd
 import re
@@ -113,17 +125,17 @@ def processCameraData(filename, pointcolor, utmMin=(657224.13, 5085306.11, "32T"
 			opacity=1
 	))
 
-f = open(".\\final_project_data\\final_project_point_cloud.csv", 'r', encoding='utf-8-sig')
+f = open(pointcloudFile, 'r', encoding='utf-8-sig')
 
 # hard coded constants for the bounding box
 utmMin = (657224.13-20, 5085306.11-20, "32T") #East, North, Zone #pad with 20
 utmMax = (657433.61, 5085476.77, "32T") #East, North, Zone
 
 #process Camera(s)
-CamX,CamY,CamZ,CamQ, cameraPlot = processCameraData(".\\final_project_data\\image\\camera.config",'red', utmMin=utmMin)
+CamX,CamY,CamZ,CamQ, cameraPlot = processCameraData(cameraFile,'red', utmMin=utmMin)
 
 #process Car Data And Plot it
-CarX, CarY, CarZ, carPlot = processCarData(".\\final_project_data\\trajectory.fuse", utmMin=utmMin)
+CarX, CarY, CarZ, carPlot = processCarData(trajectoryFile, utmMin=utmMin)
 carXY= zip(CarX,CarY)
 
 # Process Point Cloud here
@@ -154,7 +166,7 @@ data = np.column_stack((Xs, Ys, Zs))
 
 #generate model and fit data
 print("BEGIN CLUSTERING POINTCLOUD")
-est = DBSCAN(eps=3.5, min_samples=6500//threshold, algorithm='auto', n_jobs=cpuCount)
+est = DBSCAN(eps=eps, min_samples=minsamples, algorithm='auto', n_jobs=cpuCount)
 clusterArray = est.fit_predict(data, sample_weight=IsN) #tree is 3-6 levels deep (4 cores)
 print(data); print(len(data)); print(est); print(clusterArray); print(len(clusterArray));
 
@@ -233,5 +245,5 @@ fig = go.Figure(
 	)
 )
 
-po.plot(fig, filename=".\\results\\pointcloud.html", auto_open=False)
+po.plot(fig, filename=outfilename, auto_open=False)
 fig.show()

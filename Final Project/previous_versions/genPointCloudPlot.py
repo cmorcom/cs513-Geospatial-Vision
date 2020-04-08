@@ -1,3 +1,6 @@
+threshold = 20
+pointcloudFile = ".\\final_project_data\\final_project_point_cloud.csv"
+
 import pandas as pd
 import re
 import numpy as np
@@ -90,21 +93,20 @@ def processCameraData(filename, pointcolor, utmMin=(657224.13, 5085306.11, "32T"
 			opacity=1
 	))
 
-f = open(".\\final_project_data\\final_project_point_cloud.csv", 'r', encoding='utf-8-sig')
+f = open(pointcloudFile, 'r', encoding='utf-8-sig')
 
 # hard coded constants for the bounding box
 utmMin = (657224.13-20, 5085306.11-20, "32T") #East, North, Zone #pad with 20
 utmMax = (657433.61, 5085476.77, "32T") #East, North, Zone
 
 #process Camera(s)
-CamX,CamY,CamZ,CamQ, cameraPlot = processCameraData(".\\final_project_data\\image\\camera.config",'red', utmMin=utmMin)
+CamX,CamY,CamZ,CamQ, cameraPlot = processCameraData("..\\final_project_data\\image\\camera.config",'red', utmMin=utmMin)
 
 #process Car Data And Plot it
-CarX, CarY, CarZ, carPlot = processCarData(".\\final_project_data\\trajectory.fuse", utmMin=utmMin)
+CarX, CarY, CarZ, carPlot = processCarData("..\\final_project_data\\trajectory.fuse", utmMin=utmMin)
 
 # Process Point Cloud here
 done = False
-threshold = 1
 num=0
 Xs, Ys, Zs, Is = [], [], [], []
 while not done:
