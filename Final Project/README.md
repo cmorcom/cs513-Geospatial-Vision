@@ -1,3 +1,20 @@
+Project Ideas:
+    
+    By using various clustering settings (farthest distance and filtering), we are able to identify the speed 
+    and trajectory of the car and the objects around it based on a clustering analysis.
+
+    Our Results are stored in './results'. You must open a web page to view them.
+    We tested the data with various settings and filtered out some points as noise. 
+    The filenames show which settings were changes in the DBSCAN clustering analysis.
+
+    Depending on the filtering, we can omit features, but in the final version,
+    we chose to show all of the objects we could identify.
+
+    This implementation is purely based on pointcloud analysis and does not use the camera images at all.
+
+    
+
+Notes:
 You can see results in the results folder:
     -- please enable webGL in "chrome://flags" to open the pointcloud.html
     -- RoadRecognition.html tries to cluster the pointcloud based on other parameters (earlier version but still relevant)
@@ -35,8 +52,9 @@ trajectory.fuse
         [latitude] [longitude] [altitude] [intensity]
 
 Output:
-    Using the point cloud and images, generate layered images:
-        - isolated points pertaining to specified object (road boundaries)
+    Using the point cloud and images, generate pointclouds of objects:
+        - isolated points pertaining to all objects on road
+
 
 Methodology:
     -- process all points and subtract the min value of the bounding box 
